@@ -1,5 +1,24 @@
 # GenUI FlightDeck Sessions Context
 
+## Project Concept
+
+**GenUI FlightDeck** is a website and agentic experimentation system for building trustworthy generated interfaces. It turns every generated UI into a measurable experiment: agents create declarative UI **Blueprints**, validate them against an approved **Catalog** of trusted Components and `frontend/design.md`, deploy them as **Variants** on a product **Surface**, and learn from real interaction evidence.
+
+The first visible Surface is an event-discovery experience, but the product is not just an events app. The event UI is the testbed for the larger FlightDeck loop: generate multiple interface approaches, choose the most relevant first action for a user task, test which approach works better for different behavior archetypes, and feed those results into a structured **Reasoning Bank**.
+
+FlightDeck is designed around a controlled GenUI safety model. Agents should not invent executable frontend code at runtime. They produce declarative Blueprints that reference pre-approved Components, while the client renders those Components through a trusted renderer. The system should eventually align this model with A2UI-style payloads, AG-UI/CopilotKit runtime interaction, and LangChain/LangGraph orchestration.
+
+The project does four things:
+
+1. **Generate UI Blueprints:** Given a task, persona/archetype, prior telemetry, and design rules, the system creates controlled interface candidates for the highest-leverage action point.
+2. **Critique and validate them:** A Critique Agent checks schema, Catalog usage, `frontend/design.md`, UX Laws, accessibility, copy clarity, motion, and experiment isolation before a Blueprint enters the Library.
+3. **Run live experiments:** Experiments assign validated Blueprints as Variants, serve them on a Surface, and collect signals such as first action, task completion, backtracks, variant switches, latency, accessibility status, and feedback.
+4. **Turn evidence into improvement:** The Reasoning Bank stores structured outcomes and proposed design rules, then future agents use that evidence to improve new Blueprints, reports, `frontend/design.md`, and possibly system prompts.
+
+The north-star product is an experimentation cockpit for generated interfaces. Designers and UXRs should get first-click evidence and design-rule recommendations. Developers should get schema, renderer, Catalog, latency, and replay information. PMs should get experiment status, uncertainty, and ship/iterate/hold recommendations. QA should get accessibility, regression, and broken-action evidence.
+
+The hackathon implementation currently proves the loop with a FastAPI + SQLite backend, deterministic Blueprint generation, a rule-based critique pass, a TanStack Start frontend, a manual GenUI renderer, and REST telemetry. The next evolution is to make the loop truly agentic with LangChain/LangGraph, wire AG-UI/CopilotKit where useful, align Blueprints with the chosen A2UI contract, and activate the Reasoning Bank and report endpoints.
+
 Last updated: 2026-05-16
 
 This README is the shared session context for Codex agents and contributors working on **GenUI FlightDeck**. Read this before changing the repo. The goal is for every contributor session to start from the same product intent, design rules, and collaboration protocol.
