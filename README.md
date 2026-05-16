@@ -51,7 +51,8 @@ Use this hierarchy:
 2. **`frontend/design.md`** is the single source of truth for the frontend UI, FlightDeck UX Laws, agentic loop, live testing model, Reasoning Bank, and reporting rules.
 3. **`Suggestions.md`** is the shared suggestion board. Agents should consult it before planning work and update it when priorities change.
 4. **`README.md`** is the shared session context for agents and contributors.
-5. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
+5. **`docs/mcp.md`** explains the FlightDeck Manufact MCP server for contributor agents.
+6. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
 
 The current `frontend/design.md` merges two layers:
 
@@ -69,6 +70,7 @@ The public repo is:
 Current main branch contains:
 - `backend/`: FastAPI PoC backend for Experiments, Blueprint Library, Variants, telemetry Events, persona MD summaries, and manual generation.
 - `CONTEXT.md`: ubiquitous language glossary — defines Blueprint, Component, Catalog, Surface, Library, Variant, Experiment, and other domain terms.
+- `docs/mcp.md`: Manufact `mcp-use` server guide for agents that need FlightDeck context, resources, prompts, and safe tools.
 - `Suggestions.md`: shared suggestion board for agents and contributors.
 - `frontend/`: TanStack Start frontend app.
 - `frontend/design.md`: unified DESIGN.md-style source for UI plus FlightDeck agentic UX rules.
