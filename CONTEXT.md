@@ -5,15 +5,15 @@ An agentic system that generates, critiques, manages, and continuously improves 
 ## Language
 
 **Blueprint**:
-A declarative payload that an agent generates describing what UI to render. It references Components from the Catalog, carries a hypothesis, and is the atomic unit stored in the Library.
-_Avoid_: component (when referring to the generated artifact), layout, spec, view
+A declarative payload that an agent generates describing what UI to render for a Surface. It contains a flat list of Component references with ID-based parent-child relationships (following the A2UI adjacency-list model), carries a hypothesis, and is the unit stored in the Library. A single Blueprint is self-contained — it describes a complete experience for one Surface.
+_Avoid_: component (when referring to the generated artifact), layout, spec, view, composition
 
 **Component**:
 A trusted, pre-built frontend element in the Catalog (e.g., `EventCard`, `FilterCard`). Components are hand-coded and approved — agents never create them, only reference them in Blueprints.
 _Avoid_: widget, element, block
 
 **Catalog**:
-The approved set of Components that agents may reference when generating Blueprints. Nothing outside the Catalog can appear in a Blueprint.
+The approved set of Components that agents may reference when generating Blueprints, expressed as an A2UI JSON Schema. Stored as immutable versioned snapshots — agents create new versions, never mutate existing ones. Each Blueprint records which Catalog version it was validated against.
 _Avoid_: component library (when referring to the approved set of renderable elements)
 
 **Surface**:
@@ -40,14 +40,27 @@ _Avoid_: validator, reviewer, linter
 A structured evidence store that captures experiment outcomes, observed metrics, proposed design rules, and learnings. It stores observable evidence, never hidden chain-of-thought.
 _Avoid_: knowledge base, memory, reasoning log
 
+### North-star terms
+
+**Project**:
+A self-contained experimentation scope that owns its own Catalog, Library, Surfaces, Experiments, and Reasoning Bank. In the hackathon, there is one implicit Project (`default`). In the future, each Project is independent.
+_Avoid_: workspace, tenant, app
+
+**Client**:
+An organization or individual that owns one or more Projects. Not implemented in the hackathon — all work belongs to a single implicit Client.
+_Avoid_: customer, user, account
+
 ## Relationships
 
-- An agent generates a **Blueprint** that composes **Components** from the **Catalog**
-- The **Critique Agent** validates a **Blueprint** before it enters the **Library**
+- A **Client** owns one or more **Projects** (north star; hackathon uses one implicit Project)
+- A **Project** owns a **Catalog**, a **Library**, **Surfaces**, **Experiments**, and a **Reasoning Bank**
+- An agent generates a **Blueprint** — a flat list of **Component** references targeting a **Surface**
+- A **Blueprint** records which **Catalog** version it was validated against
+- The **Critique Agent** validates a **Blueprint** against the active **Catalog** version before it enters the **Library**
 - When an **Experiment** runs, a **Blueprint** from the **Library** becomes a **Variant**
 - A **Variant** is served on a **Surface** to collect evidence
 - Evidence from a **Variant** is stored in the **Reasoning Bank**
-- The **Reasoning Bank** informs future **Blueprint** generation
+- The **Reasoning Bank** informs future **Blueprint** generation and **Catalog** evolution
 
 ## Example dialogue
 
@@ -56,6 +69,9 @@ _Avoid_: knowledge base, memory, reasoning log
 >
 > **Dev:** "So when does a **Blueprint** become a **Variant**?"
 > **Domain expert:** "When it's assigned to an **Experiment** and deployed on a **Surface** to collect real user evidence."
+>
+> **Dev:** "What's inside a Blueprint? Is it one Component or many?"
+> **Domain expert:** "It's a flat list of **Component** references — each with an ID. Parent Components reference their children by ID. The whole list targets one **Surface**."
 
 ## Flagged ambiguities
 
