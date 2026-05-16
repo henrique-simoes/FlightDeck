@@ -71,6 +71,122 @@ The ideal visible product flow:
 
 The first product surface can use the current event-discovery app as the testbed. For example, FlightDeck can test whether a user should see filters first, recommendation cards first, a quiz first, a map/list first, or a comparison table first.
 
+## System Architecture
+
+FlightDeck should be built as a client/server experimentation system with a persistent database and explicit REST APIs. The architecture must keep generated UI declarative, measurable, and reviewable.
+
+### Client
+
+The client is the `frontend/` TanStack Start app. It is responsible for rendering trusted UI components, not arbitrary agent-generated code.
+
+Client responsibilities:
+
+- Render the current event-discovery product surface.
+- Render generated UI variants from an approved component catalog.
+- Read and apply `frontend/design.md` for UI tokens, UX rules, accessibility constraints, and experiment behavior.
+- Show the active experiment, assigned variant, critique status, first-action expectation, and Reasoning Bank preview.
+- Capture first-click, first meaningful action, task completion, backtracks, variant switches, feedback, latency, and accessibility status.
+- Respect reduced-motion, keyboard navigation, focus order, and WCAG requirements.
+- Send telemetry events to the server through REST endpoints.
+- Display role-specific reports for Designers/UXRs, Developers, PMs, and QA.
+
+The client should treat generated UI payloads as declarative instructions. Agents may choose components, props, content, states, and actions from the catalog, but the client owns rendering and safety.
+
+### Server
+
+The server is the orchestration and API layer for FlightDeck. It should expose REST APIs to the frontend and coordinate the future LangChain/LangGraph agent loop.
+
+Server responsibilities:
+
+- Accept UXR studies, tasks, personas/archetypes, experiments, variants, and telemetry events.
+- Run or call the Intent, Variant Generator, DESIGN.md Validator, Critique, Experiment, Telemetry, Reasoning Bank, Report, and Evolution agents.
+- Validate generated variants against schema, approved component catalog, `frontend/design.md`, accessibility constraints, and experiment isolation rules.
+- Assign variants through A/A, A/B/N, contextual bandit, holdout, or manual-review modes.
+- Persist all experiment definitions, variant metadata, telemetry events, reports, and Reasoning Bank entries.
+- Produce role-specific report payloads.
+- Propose reviewable changes to `frontend/design.md` or system prompts when repeated evidence supports a change.
+
+The server should never return hidden chain-of-thought. It may return concise rationale, hypothesis, evidence, and accepted or rejected design rules.
+
+### Database
+
+The database is the system of record for experiments, telemetry, reports, and the Reasoning Bank. Use a relational database or document database, but keep schemas explicit and versioned.
+
+Suggested logical collections or tables:
+
+- `uxr_studies`: research studies, goals, consent scope, owners, and status.
+- `uxr_tasks`: task prompts, expected outcomes, target surfaces, and success criteria.
+- `archetypes`: behavior archetypes such as Scanner, Comparer, Explorer, Expert Operator, Uncertain Novice, and Risk-Sensitive User.
+- `experiments`: experiment metadata, hypothesis, assignment strategy, guardrails, and status.
+- `variants`: variant metadata, surface ID, catalog version, design hash, expected first action, and guardrail result.
+- `telemetry_events`: UI rendered, first action, task completion, feedback, backtracks, latency, accessibility status, and variant switches.
+- `reasoning_bank_entries`: structured evidence, observed metrics, proposed design rules, proposed prompt changes, and review status.
+- `reports`: role-specific report snapshots for Designer/UXR, Developer, PM, and QA views.
+- `design_rule_proposals`: proposed updates to `frontend/design.md`, linked evidence, authoring agent, and approval state.
+- `prompt_versions`: system prompt versions, agent prompt versions, linked outcomes, and rollback metadata.
+
+Do not create JSON data files yet unless explicitly requested. When JSON sources are introduced, they should mirror these database concepts with clear schemas and version fields.
+
+### REST APIs
+
+Use these REST endpoints as the initial API contract. They are already part of the FlightDeck design source in `frontend/design.md` and should stay aligned with it.
+
+```http
+POST /uxr/studies
+POST /uxr/tasks
+POST /uxr/personas
+POST /experiments
+POST /experiments/{id}/variants
+POST /events/ui-rendered
+POST /events/first-action
+POST /events/task-completed
+POST /events/feedback
+GET  /reports/designer/{experiment_id}
+GET  /reports/pm/{experiment_id}
+GET  /reports/dev/{experiment_id}
+GET  /reports/qa/{experiment_id}
+```
+
+Endpoint intent:
+
+- `POST /uxr/studies`: Create or update a UXR study container with goals, consent scope, and target surfaces.
+- `POST /uxr/tasks`: Register research or product tasks that generated UIs should support.
+- `POST /uxr/personas`: Register behavior archetypes or task-scoped persona assumptions. Prefer archetypes over demographic personas.
+- `POST /experiments`: Create an experiment with hypothesis, primary metric, guardrails, assignment strategy, and target task.
+- `POST /experiments/{id}/variants`: Add generated variants, expected first action, catalog version, design hash, and critique status.
+- `POST /events/ui-rendered`: Log that a surface or variant rendered, including latency and accessibility status.
+- `POST /events/first-action`: Log the user's first click or first meaningful action against the expected action.
+- `POST /events/task-completed`: Log task outcome, completion time, backtracks, variant switches, and success state.
+- `POST /events/feedback`: Capture explicit preference, comments, UXR notes, and qualitative feedback.
+- `GET /reports/designer/{experiment_id}`: Return first-click maps, path clusters, screenshots, archetype differences, and design-rule recommendations.
+- `GET /reports/pm/{experiment_id}`: Return experiment status, metric direction, uncertainty, risks, and ship/iterate/hold/kill recommendation.
+- `GET /reports/dev/{experiment_id}`: Return schema failures, renderer bugs, catalog mismatches, latency, endpoint failures, and replay links.
+- `GET /reports/qa/{experiment_id}`: Return accessibility failures, regression screenshots, broken actions, cross-renderer differences, and WCAG checklist status.
+
+Core telemetry payloads should include:
+
+- `session_id` or consented user identifier.
+- `study_id`, `task_id`, `experiment_id`, `variant_id`, and `surface_id`.
+- `primary_intent` and `persona_archetype` estimate.
+- `first_action_expected` and `first_action_actual`.
+- `task_completed`, `backtrack_count`, `variant_switch_count`, and `latency_ms`.
+- `a11y_status`, `renderer_version`, `catalog_version`, and `design_md_hash`.
+- `consent_scope`.
+
+### Request Flow
+
+The intended request flow:
+
+1. Client submits or receives a user task.
+2. Server creates or selects an experiment.
+3. LangChain/LangGraph agents generate and critique variants.
+4. Server stores variants and assignment metadata.
+5. Client renders the assigned variant from trusted components.
+6. Client posts telemetry events as the user interacts.
+7. Server updates metrics and Reasoning Bank entries.
+8. Reports are generated from stored experiment evidence.
+9. Evolution agent proposes reviewable updates to `frontend/design.md` or prompt versions.
+
 ## Agent Loop
 
 Use LangChain/LangGraph agents for the future improvement loop.
