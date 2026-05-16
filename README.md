@@ -30,15 +30,16 @@ Use this hierarchy:
 
 1. **`CONTEXT.md`** is the ubiquitous language glossary. Every domain term used across the codebase is defined here.
 2. **`frontend/design.md`** is the single source of truth for the frontend UI, FlightDeck UX Laws, agentic loop, live testing model, Reasoning Bank, and reporting rules.
-3. **`README.md`** is the shared session context for agents and contributors.
-4. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
+3. **`Suggestions.md`** is the shared suggestion board. Agents should consult it before planning work and update it when priorities change.
+4. **`README.md`** is the shared session context for agents and contributors.
+5. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
 
 The current `frontend/design.md` merges two layers:
 
 - **UI layer:** Eventinkerer-style frontend identity with violet-to-cyan gradient, soft rounded controls, clear metadata hierarchy, event filters, and responsive event cards.
 - **FlightDeck layer:** UX-law critique, A/B/N testing, behavior archetypes, LangChain/LangGraph agent loop, Reasoning Bank, UXR endpoints, accessibility gates, and role-specific reports.
 
-Whenever the product direction changes, update this README. Whenever the design system, UI rules, or agentic testing rules change, update `frontend/design.md`. Whenever domain terminology is added or clarified, update `CONTEXT.md`.
+Whenever the product direction changes, update this README. Whenever the design system, UI rules, or agentic testing rules change, update `frontend/design.md`. Whenever domain terminology is added or clarified, update `CONTEXT.md`. Whenever priorities, next steps, or implementation recommendations change, update `Suggestions.md`.
 
 ## Current Main Branch State
 
@@ -49,6 +50,7 @@ The public repo is:
 Current main branch contains:
 
 - `CONTEXT.md`: ubiquitous language glossary — defines Blueprint, Component, Catalog, Surface, Library, Variant, Experiment, and other domain terms.
+- `Suggestions.md`: shared suggestion board for agents and contributors.
 - `frontend/`: TanStack Start frontend app.
 - `frontend/design.md`: unified DESIGN.md-style source for UI plus FlightDeck agentic UX rules.
 - `frontend/readme.md`: frontend setup and structure notes.
