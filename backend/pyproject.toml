@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "FastAPI backend for the FlightDeck Declarative Gen-UI PoC"
 requires-python = ">=3.11"
 dependencies = [
+  "ag-ui-langgraph>=0.0.32",
+  "copilotkit>=0.1.0",
   "fastapi>=0.116.0",
+  "langchain>=1.0.0",
+  "langchain-openai>=1.0.0",
+  "langgraph>=1.0.0",
   "pydantic>=2.10.0",
   "uvicorn[standard]>=0.32.0",
 ]
@@ -28,4 +33,3 @@ packages = ["flightdeck"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-

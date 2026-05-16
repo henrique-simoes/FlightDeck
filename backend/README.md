@@ -18,6 +18,13 @@ The API runs on `http://localhost:8000` by default.
 
 ## Generate Blueprints
 
+Blueprint generation uses a LangGraph agent with CopilotKit middleware by default. Configure an OpenAI key before running generation:
+
+```bash
+export OPENAI_API_KEY=...
+export FLIGHTDECK_AGENT_MODEL=openai:gpt-4.1
+```
+
 Generate all persona assignments:
 
 ```bash
@@ -31,6 +38,14 @@ uv run flightdeck generate --persona scanner
 ```
 
 Supported personas are `scanner`, `comparer`, `explorer`, and `expert_operator`.
+
+For local development without the agent, use the deterministic fallback explicitly:
+
+```bash
+uv run flightdeck generate --persona comparer --fallback
+```
+
+The command output includes `source`. It should be `langgraph_copilotkit` when the agent generated the Blueprint and `local_fallback` only when `--fallback` was used.
 
 ## Customize Blueprint Output
 

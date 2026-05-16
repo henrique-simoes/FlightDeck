@@ -18,15 +18,19 @@ def main() -> None:
         help="Generate only one persona blueprint",
     )
     generate.add_argument("--all", action="store_true", help="Generate all persona blueprints")
+    generate.add_argument(
+        "--fallback",
+        action="store_true",
+        help="Use the local deterministic generator if LangGraph/CopilotKit is unavailable",
+    )
 
     args = parser.parse_args()
 
     if args.command == "generate":
         if args.all:
-            print(json.dumps(generate_all(), indent=2))
+            print(json.dumps(generate_all(allow_fallback=args.fallback), indent=2))
             return
         if args.persona:
-            print(json.dumps(generate_for_persona(args.persona), indent=2))
+            print(json.dumps(generate_for_persona(args.persona, allow_fallback=args.fallback), indent=2))
             return
         parser.error("generate requires --persona or --all")
-
