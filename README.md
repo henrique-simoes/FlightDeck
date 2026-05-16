@@ -12,29 +12,33 @@ The core idea is **live experimentation for GenUIs**:
 
 1. A user prompt arrives.
 2. Agents infer the user's goal and highest-leverage first action.
-3. Agents generate multiple interface variants from an approved catalog.
-4. A critique agent checks schema, catalog, accessibility, UX heuristics, and design compliance.
-5. The website shows one or more variants and logs interaction signals.
-6. The system writes structured experiment learnings into a Reasoning Bank.
-7. Future UIs improve from those learnings.
-8. Agents may propose improvements to `frontend/design.md` and possibly the system prompt, but changes must be reviewable and auditable.
+3. Agents generate multiple **Blueprints** — declarative UI payloads that reference **Components** from the approved **Catalog**.
+4. The **Critique Agent** validates each Blueprint against schema, Catalog, accessibility, UX heuristics, and design compliance.
+5. Validated Blueprints enter the **Library**.
+6. An **Experiment** assigns Blueprints as **Variants** and serves them on a **Surface**. The website logs interaction signals.
+7. The system writes structured experiment learnings into the **Reasoning Bank**.
+8. Future Blueprints improve from those learnings.
+9. Agents may propose improvements to `frontend/design.md` and possibly the system prompt, but changes must be reviewable and auditable.
 
-This is not meant to become a generic GenUI demo. It is an experimentation cockpit for generated interfaces: every generated UI should carry a hypothesis, pass guardrails, produce measurable evidence, and improve future UI decisions.
+This is not meant to become a generic GenUI demo. It is an experimentation cockpit for generated interfaces: every Blueprint should carry a hypothesis, pass guardrails, produce measurable evidence, and improve future UI decisions.
+
+See `CONTEXT.md` for the full glossary of ubiquitous language used throughout this project.
 
 ## Source Of Truth
 
 Use this hierarchy:
 
-1. **`frontend/design.md`** is the single source of truth for the frontend UI, FlightDeck UX Laws, agentic loop, live testing model, Reasoning Bank, and reporting rules.
-2. **`README.md`** is the shared session context for agents and contributors.
-3. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
+1. **`CONTEXT.md`** is the ubiquitous language glossary. Every domain term used across the codebase is defined here.
+2. **`frontend/design.md`** is the single source of truth for the frontend UI, FlightDeck UX Laws, agentic loop, live testing model, Reasoning Bank, and reporting rules.
+3. **`README.md`** is the shared session context for agents and contributors.
+4. **`frontend/readme.md`** is the technical README for running and understanding the current frontend app.
 
 The current `frontend/design.md` merges two layers:
 
 - **UI layer:** Eventinkerer-style frontend identity with violet-to-cyan gradient, soft rounded controls, clear metadata hierarchy, event filters, and responsive event cards.
 - **FlightDeck layer:** UX-law critique, A/B/N testing, behavior archetypes, LangChain/LangGraph agent loop, Reasoning Bank, UXR endpoints, accessibility gates, and role-specific reports.
 
-Whenever the product direction changes, update this README. Whenever the design system, UI rules, or agentic testing rules change, update `frontend/design.md`.
+Whenever the product direction changes, update this README. Whenever the design system, UI rules, or agentic testing rules change, update `frontend/design.md`. Whenever domain terminology is added or clarified, update `CONTEXT.md`.
 
 ## Current Main Branch State
 
@@ -44,6 +48,7 @@ The public repo is:
 
 Current main branch contains:
 
+- `CONTEXT.md`: ubiquitous language glossary — defines Blueprint, Component, Catalog, Surface, Library, Variant, Experiment, and other domain terms.
 - `frontend/`: TanStack Start frontend app.
 - `frontend/design.md`: unified DESIGN.md-style source for UI plus FlightDeck agentic UX rules.
 - `frontend/readme.md`: frontend setup and structure notes.
@@ -55,6 +60,13 @@ Historical context:
 - Do not assume starter-kit files exist on `main` unless they are present in this repo.
 - Earlier local-only work created design/session context files in another checkout, but `frontend/design.md` is now the main branch design source.
 
+## Scope
+
+The project has two layers of ambition:
+
+- **Hackathon scope (what we're building now):** The three core fluxes from the backend draft — generate Blueprints, critique and manage a Library of Blueprints, and collect usage stats. The frontend event-discovery app (Eventinkerer) is the first product Surface, used as a visible testbed.
+- **North star (where this can go):** A full experimentation cockpit with 9+ agents, behavior archetypes, holdout groups, a Reasoning Bank, and role-specific reports.
+
 ## Product Direction
 
 The website should demonstrate the process of creating generated interfaces, testing them live, and improving future UIs from evidence.
@@ -62,35 +74,36 @@ The website should demonstrate the process of creating generated interfaces, tes
 The ideal visible product flow:
 
 1. User gives a task or prompt.
-2. System generates 2 to 4 UI variants.
-3. System highlights the primary action point it believes the user wants.
-4. User interacts with one variant.
-5. System captures first click, first meaningful action, task completion, backtracks, switches, feedback, latency, and accessibility status.
-6. System updates a Reasoning Bank with structured evidence.
-7. System generates reports for Designers/UXRs, Developers, PMs, and QA.
+2. System generates 2 to 4 **Blueprints**, each composing **Components** from the **Catalog**.
+3. The **Critique Agent** validates each Blueprint. Passing Blueprints enter the **Library**.
+4. An **Experiment** assigns Blueprints as **Variants** on a **Surface**. The system highlights the primary action point it believes the user wants.
+5. User interacts with one Variant.
+6. System captures first click, first meaningful action, task completion, backtracks, switches, feedback, latency, and accessibility status.
+7. System updates the **Reasoning Bank** with structured evidence.
+8. System generates reports for Designers/UXRs, Developers, PMs, and QA.
 
-The first product surface can use the current event-discovery app as the testbed. For example, FlightDeck can test whether a user should see filters first, recommendation cards first, a quiz first, a map/list first, or a comparison table first.
+The first **Surface** is the current event-discovery app. For example, FlightDeck can test whether a user should see filters first, recommendation cards first, a quiz first, a map/list first, or a comparison table first.
 
 ## System Architecture
 
-FlightDeck should be built as a client/server experimentation system with a persistent database and explicit REST APIs. The architecture must keep generated UI declarative, measurable, and reviewable.
+FlightDeck should be built as a client/server experimentation system with a persistent database and explicit REST APIs. The architecture must keep Blueprints declarative, measurable, and reviewable.
 
 ### Client
 
-The client is the `frontend/` TanStack Start app. It is responsible for rendering trusted UI components, not arbitrary agent-generated code.
+The client is the `frontend/` TanStack Start app. It is responsible for rendering trusted **Components**, not arbitrary agent-generated code.
 
 Client responsibilities:
 
-- Render the current event-discovery product surface.
-- Render generated UI variants from an approved component catalog.
+- Render the current event-discovery **Surface**.
+- Render **Variants** (Blueprints assigned to an Experiment) using **Components** from the **Catalog**.
 - Read and apply `frontend/design.md` for UI tokens, UX rules, accessibility constraints, and experiment behavior.
-- Show the active experiment, assigned variant, critique status, first-action expectation, and Reasoning Bank preview.
-- Capture first-click, first meaningful action, task completion, backtracks, variant switches, feedback, latency, and accessibility status.
+- Show the active Experiment, assigned Variant, critique status, first-action expectation, and Reasoning Bank preview.
+- Capture first-click, first meaningful action, task completion, backtracks, Variant switches, feedback, latency, and accessibility status.
 - Respect reduced-motion, keyboard navigation, focus order, and WCAG requirements.
 - Send telemetry events to the server through REST endpoints.
 - Display role-specific reports for Designers/UXRs, Developers, PMs, and QA.
 
-The client should treat generated UI payloads as declarative instructions. Agents may choose components, props, content, states, and actions from the catalog, but the client owns rendering and safety.
+The client treats **Blueprints** as declarative instructions. Agents may reference Components, props, content, states, and actions from the **Catalog**, but the client owns rendering and safety.
 
 ### Server
 
@@ -98,11 +111,12 @@ The server is the orchestration and API layer for FlightDeck. It should expose R
 
 Server responsibilities:
 
-- Accept UXR studies, tasks, personas/archetypes, experiments, variants, and telemetry events.
+- Accept UXR studies, tasks, personas/archetypes, Experiments, Blueprints, and telemetry events.
 - Run or call the Intent, Variant Generator, DESIGN.md Validator, Critique, Experiment, Telemetry, Reasoning Bank, Report, and Evolution agents.
-- Validate generated variants against schema, approved component catalog, `frontend/design.md`, accessibility constraints, and experiment isolation rules.
-- Assign variants through A/A, A/B/N, contextual bandit, holdout, or manual-review modes.
-- Persist all experiment definitions, variant metadata, telemetry events, reports, and Reasoning Bank entries.
+- Validate generated **Blueprints** against schema, **Catalog**, `frontend/design.md`, accessibility constraints, and experiment isolation rules.
+- Manage the **Library** of validated Blueprints.
+- Assign Blueprints as **Variants** through A/A, A/B/N, contextual bandit, holdout, or manual-review modes.
+- Persist all Experiment definitions, Variant metadata, telemetry events, reports, and Reasoning Bank entries.
 - Produce role-specific report payloads.
 - Propose reviewable changes to `frontend/design.md` or system prompts when repeated evidence supports a change.
 
@@ -110,16 +124,17 @@ The server should never return hidden chain-of-thought. It may return concise ra
 
 ### Database
 
-The database is the system of record for experiments, telemetry, reports, and the Reasoning Bank. Use a relational database or document database, but keep schemas explicit and versioned.
+The database is the system of record for the Library, Experiments, telemetry, reports, and the Reasoning Bank. Use a relational database or document database, but keep schemas explicit and versioned.
 
 Suggested logical collections or tables:
 
+- `blueprints`: the **Library** — validated Blueprints with their Component references, Catalog version, design hash, and critique status.
 - `uxr_studies`: research studies, goals, consent scope, owners, and status.
-- `uxr_tasks`: task prompts, expected outcomes, target surfaces, and success criteria.
+- `uxr_tasks`: task prompts, expected outcomes, target Surfaces, and success criteria.
 - `archetypes`: behavior archetypes such as Scanner, Comparer, Explorer, Expert Operator, Uncertain Novice, and Risk-Sensitive User.
-- `experiments`: experiment metadata, hypothesis, assignment strategy, guardrails, and status.
-- `variants`: variant metadata, surface ID, catalog version, design hash, expected first action, and guardrail result.
-- `telemetry_events`: UI rendered, first action, task completion, feedback, backtracks, latency, accessibility status, and variant switches.
+- `experiments`: Experiment metadata, hypothesis, assignment strategy, guardrails, and status.
+- `variants`: Variant metadata — links a Blueprint to an Experiment and Surface, with expected first action and guardrail result.
+- `telemetry_events`: UI rendered, first action, task completion, feedback, backtracks, latency, accessibility status, and Variant switches.
 - `reasoning_bank_entries`: structured evidence, observed metrics, proposed design rules, proposed prompt changes, and review status.
 - `reports`: role-specific report snapshots for Designer/UXR, Developer, PM, and QA views.
 - `design_rule_proposals`: proposed updates to `frontend/design.md`, linked evidence, authoring agent, and approval state.
@@ -149,18 +164,18 @@ GET  /reports/qa/{experiment_id}
 
 Endpoint intent:
 
-- `POST /uxr/studies`: Create or update a UXR study container with goals, consent scope, and target surfaces.
-- `POST /uxr/tasks`: Register research or product tasks that generated UIs should support.
+- `POST /uxr/studies`: Create or update a UXR study container with goals, consent scope, and target Surfaces.
+- `POST /uxr/tasks`: Register research or product tasks that generated Blueprints should support.
 - `POST /uxr/personas`: Register behavior archetypes or task-scoped persona assumptions. Prefer archetypes over demographic personas.
-- `POST /experiments`: Create an experiment with hypothesis, primary metric, guardrails, assignment strategy, and target task.
-- `POST /experiments/{id}/variants`: Add generated variants, expected first action, catalog version, design hash, and critique status.
-- `POST /events/ui-rendered`: Log that a surface or variant rendered, including latency and accessibility status.
+- `POST /experiments`: Create an Experiment with hypothesis, primary metric, guardrails, assignment strategy, and target task.
+- `POST /experiments/{id}/variants`: Assign Blueprints from the Library as Variants, with expected first action, Catalog version, design hash, and critique status.
+- `POST /events/ui-rendered`: Log that a Surface rendered a Variant, including latency and accessibility status.
 - `POST /events/first-action`: Log the user's first click or first meaningful action against the expected action.
-- `POST /events/task-completed`: Log task outcome, completion time, backtracks, variant switches, and success state.
+- `POST /events/task-completed`: Log task outcome, completion time, backtracks, Variant switches, and success state.
 - `POST /events/feedback`: Capture explicit preference, comments, UXR notes, and qualitative feedback.
 - `GET /reports/designer/{experiment_id}`: Return first-click maps, path clusters, screenshots, archetype differences, and design-rule recommendations.
-- `GET /reports/pm/{experiment_id}`: Return experiment status, metric direction, uncertainty, risks, and ship/iterate/hold/kill recommendation.
-- `GET /reports/dev/{experiment_id}`: Return schema failures, renderer bugs, catalog mismatches, latency, endpoint failures, and replay links.
+- `GET /reports/pm/{experiment_id}`: Return Experiment status, metric direction, uncertainty, risks, and ship/iterate/hold/kill recommendation.
+- `GET /reports/dev/{experiment_id}`: Return schema failures, renderer bugs, Catalog mismatches, latency, endpoint failures, and replay links.
 - `GET /reports/qa/{experiment_id}`: Return accessibility failures, regression screenshots, broken actions, cross-renderer differences, and WCAG checklist status.
 
 Core telemetry payloads should include:
@@ -178,13 +193,13 @@ Core telemetry payloads should include:
 The intended request flow:
 
 1. Client submits or receives a user task.
-2. Server creates or selects an experiment.
-3. LangChain/LangGraph agents generate and critique variants.
-4. Server stores variants and assignment metadata.
-5. Client renders the assigned variant from trusted components.
+2. Server creates or selects an **Experiment**.
+3. LangChain/LangGraph agents generate **Blueprints** and the **Critique Agent** validates them.
+4. Validated Blueprints enter the **Library**. The Experiment assigns them as **Variants**.
+5. Client renders the assigned Variant on a **Surface** using trusted **Components**.
 6. Client posts telemetry events as the user interacts.
-7. Server updates metrics and Reasoning Bank entries.
-8. Reports are generated from stored experiment evidence.
+7. Server updates metrics and **Reasoning Bank** entries.
+8. Reports are generated from stored Experiment evidence.
 9. Evolution agent proposes reviewable updates to `frontend/design.md` or prompt versions.
 
 ## Agent Loop
@@ -194,11 +209,11 @@ Use LangChain/LangGraph agents for the future improvement loop.
 Recommended agents:
 
 - **Intent Agent:** Reads the user prompt, task context, and future data sources. Infers goal, risk, and highest-leverage first action.
-- **Variant Generator Agent:** Generates 2 to 4 controlled UI variants from an approved catalog.
-- **DESIGN.md Validator Agent:** Checks generated UI against `frontend/design.md`.
-- **Critique Agent:** Audits schema, catalog, WCAG, UX Laws, copy clarity, motion, dark-pattern risk, and experiment isolation.
-- **Experiment Agent:** Assigns A/A, A/B/N, contextual bandit, holdout, or manual-review modes.
-- **Telemetry Agent:** Logs first click, first meaningful action, completion, backtracks, variant switches, latency, accessibility signals, and feedback.
+- **Blueprint Generator Agent:** Generates 2 to 4 controlled **Blueprints** from the **Catalog**.
+- **DESIGN.md Validator Agent:** Checks generated Blueprints against `frontend/design.md`.
+- **Critique Agent:** Audits schema, Catalog, WCAG, UX Laws, copy clarity, motion, dark-pattern risk, and experiment isolation. Blueprints that pass enter the **Library**.
+- **Experiment Agent:** Assigns Blueprints as **Variants** through A/A, A/B/N, contextual bandit, holdout, or manual-review modes.
+- **Telemetry Agent:** Logs first click, first meaningful action, completion, backtracks, Variant switches, latency, accessibility signals, and feedback.
 - **Reasoning Bank Agent:** Stores structured evidence and proposes reusable learnings. Do not store hidden chain-of-thought.
 - **Archetype Agent:** Maps interaction behavior to reversible archetypes such as Scanner, Comparer, Explorer, Expert Operator, Uncertain Novice, and Risk-Sensitive User.
 - **Report Agent:** Produces reports tailored to Designers/UXRs, Developers, PMs, and QA.
@@ -310,11 +325,11 @@ Agents will eventually gather information from JSON files, but **do not create t
 Likely future JSON sources:
 
 - Design token exports.
-- Component catalog.
-- UI variant registry.
+- **Catalog** definition (approved Components).
+- **Library** index (validated Blueprints).
 - Experiment definitions.
 - Telemetry events.
-- Persona/archetype profiles.
+- Archetype profiles.
 - Reasoning Bank entries.
 - Report templates.
 - Agent prompt/version registry.
@@ -336,17 +351,18 @@ Minimum bar:
 - No sensitive demographic inference.
 - No hidden chain-of-thought storage or display.
 
-Generated UIs should be declarative and rendered through trusted frontend components.
+**Blueprints** must be declarative and rendered through trusted **Components** from the **Catalog**.
 
 ## Contributor Workflow
 
 Before making changes:
 
-1. Read this README.
-2. Read `frontend/design.md`.
-3. Read `frontend/readme.md` if working on the frontend app.
-4. Inspect current git status and recent commits.
-5. Keep changes scoped and update this README if the session context changes.
+1. Read `CONTEXT.md` for the ubiquitous language.
+2. Read this README.
+3. Read `frontend/design.md`.
+4. Read `frontend/readme.md` if working on the frontend app.
+5. Inspect current git status and recent commits.
+6. Keep changes scoped and update this README if the session context changes.
 
 Recommended checks:
 
@@ -383,6 +399,8 @@ If a change updates tokens, experiment rules, UX Laws, agent-loop behavior, or r
   - UXR/reporting expectations.
 - Validated `frontend/design.md` with `@google/design.md` lint: 0 errors, 0 warnings.
 - Added this root README as the shared context for future Codex agents and contributors.
+- Established ubiquitous language in `CONTEXT.md`: Blueprint, Component, Catalog, Surface, Library, Variant, Experiment, Critique Agent, Reasoning Bank.
+- Updated README to use the resolved terminology consistently.
 
 ## Links
 
