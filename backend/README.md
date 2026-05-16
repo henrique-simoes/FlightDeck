@@ -32,6 +32,26 @@ uv run flightdeck generate --persona scanner
 
 Supported personas are `scanner`, `comparer`, `explorer`, and `expert_operator`.
 
+## Customize Blueprint Output
+
+Each persona file in `backend/personas/` includes an internal `Blueprint Configuration` JSON block. Edit that block to guide future generated Blueprints.
+
+Useful fields:
+
+- `layouts`: cycles through `filters_left`, `filters_top`, and `compact_toolbar`.
+- `list_titles` and `summaries`: public copy for the generated surface.
+- `selected_categories`, `selected_areas`, and `max_prices`: initial filter state.
+- `event_orders`: event IDs in the order they should appear.
+- `list_ctas`: card CTA copy.
+
+Every run uses the next value in each list based on how many Blueprints already exist for that persona. For example, running this repeatedly will cycle through the configured variants:
+
+```bash
+uv run flightdeck generate --persona comparer
+```
+
+The persona/archetype metadata is internal. It is stored for assignment and telemetry, but the frontend does not display the user's assigned persona.
+
 ## Core Endpoints
 
 - `POST /experiments`

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
+import re
+from typing import Any
 
 from .config import PERSONAS_DIR
 from .models import PersonaId
@@ -62,6 +65,18 @@ def read_persona_md(persona_id: PersonaId) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def read_blueprint_config(persona_id: PersonaId) -> dict[str, Any]:
+    content = read_persona_md(persona_id)
+    match = re.search(
+        r"## Blueprint Configuration\s+.*?```json\s*(.*?)\s*```",
+        content,
+        flags=re.DOTALL,
+    )
+    if not match:
+        return {}
+    return json.loads(match.group(1))
+
+
 def append_persona_changelog(persona_id: PersonaId, entry: str) -> None:
     path = persona_path(persona_id)
     existing = path.read_text(encoding="utf-8")
@@ -71,4 +86,3 @@ def append_persona_changelog(persona_id: PersonaId, entry: str) -> None:
     else:
         updated = existing.replace(marker, f"{marker}\n{entry}\n", 1)
     path.write_text(updated, encoding="utf-8")
-

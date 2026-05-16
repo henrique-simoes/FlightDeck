@@ -7,8 +7,10 @@ from .catalog import critique_blueprint
 from .db import run_migrations
 from .models import PersonaId, VariantCreate
 from .personas import PERSONA_SEEDS, append_persona_changelog, ensure_personas_seeded
+from .personas import read_blueprint_config
 from .store import (
     aggregate_metrics,
+    count_blueprints_for_persona,
     create_blueprint,
     create_variant,
     get_or_create_default_experiment,
@@ -20,7 +22,14 @@ def generate_for_persona(persona_id: PersonaId) -> dict[str, str]:
     ensure_personas_seeded()
     experiment = get_or_create_default_experiment()
     metrics = aggregate_metrics(experiment_id=experiment.id, persona_id=persona_id)
-    spec = build_blueprint(persona_id, metrics)
+    generation_index = count_blueprints_for_persona(persona_id)
+    blueprint_config = read_blueprint_config(persona_id)
+    spec = build_blueprint(
+        persona_id,
+        metrics,
+        generation_index=generation_index,
+        blueprint_config=blueprint_config,
+    )
     critique = critique_blueprint(spec)
     blueprint = create_blueprint(spec, critique)
 
@@ -47,7 +56,7 @@ def generate_for_persona(persona_id: PersonaId) -> dict[str, str]:
         (
             f"- {timestamp}: Activated `{blueprint.id}` as `{variant.id}` for "
             f"`{experiment.id}`. Total telemetry events considered: "
-            f"{metrics.get('total_events', 0)}."
+            f"{metrics.get('total_events', 0)}. Generation index: {generation_index}."
         ),
     )
 
@@ -62,4 +71,3 @@ def generate_for_persona(persona_id: PersonaId) -> dict[str, str]:
 
 def generate_all() -> list[dict[str, str]]:
     return [generate_for_persona(seed.id) for seed in PERSONA_SEEDS]
-

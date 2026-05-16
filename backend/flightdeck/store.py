@@ -106,6 +106,15 @@ def get_blueprint(blueprint_id: str) -> BlueprintRecord | None:
     return _row_to_blueprint(row) if row else None
 
 
+def count_blueprints_for_persona(persona_id: PersonaId) -> int:
+    with session() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS total FROM blueprints WHERE persona_id = ?",
+            (persona_id,),
+        ).fetchone()
+    return int(row["total"])
+
+
 def create_experiment(payload: ExperimentCreate) -> ExperimentRecord:
     experiment_id = f"exp_{uuid4().hex[:12]}"
     with session() as conn:
@@ -309,4 +318,3 @@ def record_event(payload: TelemetryEventCreate) -> TelemetryEventRecord:
         metadata=json.loads(row["metadata_json"]),
         created_at=row["created_at"],
     )
-

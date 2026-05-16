@@ -88,18 +88,12 @@ export function GenUIRenderer({ assignment }: GenUIRendererProps) {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <header className="max-w-3xl">
         <div>
-          <div className="text-xs font-semibold uppercase text-primary">
-            {spec.persona_id.replace("_", " ")} variant
-          </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             {spec.event_list.title}
           </h1>
           <p className="mt-2 text-muted-foreground">{spec.event_list.summary}</p>
-        </div>
-        <div className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
-          {assignment.variant.guardrail_status === "passed" ? "Critique passed" : "Critique failed"}
         </div>
       </header>
 
