@@ -16,6 +16,26 @@ uv run uvicorn flightdeck.main:app --reload
 
 The API runs on `http://localhost:8000` by default.
 
+## Run MCP Server
+
+FlightDeck also exposes a Manufact `mcp-use` server for contributor agents.
+
+Run over streamable HTTP with Inspector/docs enabled:
+
+```bash
+uv run flightdeck mcp --transport streamable-http --host 127.0.0.1 --port 8010 --debug
+```
+
+Run over stdio for local MCP clients:
+
+```bash
+uv run flightdeck mcp --transport stdio
+```
+
+The HTTP MCP endpoint is `http://127.0.0.1:8010/mcp`. In debug mode, the Inspector is available at `http://127.0.0.1:8010/inspector` and OpenMCP discovery at `http://127.0.0.1:8010/openmcp.json`.
+
+See `../docs/mcp.md` for resources, prompts, tools, and client configuration examples.
+
 ## Generate Blueprints
 
 Blueprint generation uses a LangGraph agent with CopilotKit middleware by default. Configure an OpenAI key before running generation:

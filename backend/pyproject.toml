@@ -10,12 +10,14 @@ dependencies = [
   "langchain>=1.0.0",
   "langchain-openai>=1.0.0",
   "langgraph>=1.0.0",
+  "mcp-use>=1.7.0",
   "pydantic>=2.10.0",
   "uvicorn[standard]>=0.32.0",
 ]
 
 [project.scripts]
 flightdeck = "flightdeck.cli:main"
+flightdeck-mcp = "flightdeck.mcp_server:main"
 
 [dependency-groups]
 dev = [
