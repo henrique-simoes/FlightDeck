@@ -67,10 +67,18 @@ export function EventFilters() {
             <Calendar className="h-3.5 w-3.5" /> Date
           </Label>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" className="rounded-full text-xs">Today</Button>
-            <Button variant="outline" size="sm" className="rounded-full text-xs">This week</Button>
-            <Button variant="outline" size="sm" className="rounded-full text-xs">This month</Button>
-            <Button variant="outline" size="sm" className="rounded-full text-xs">Custom</Button>
+            <Button variant="outline" size="sm" className="rounded-full text-xs">
+              Today
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full text-xs">
+              This week
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full text-xs">
+              This month
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full text-xs">
+              Custom
+            </Button>
           </div>
         </div>
 

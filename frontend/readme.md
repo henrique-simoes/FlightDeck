@@ -25,6 +25,12 @@ Start the development server:
 npm run dev
 ```
 
+The frontend expects the FastAPI backend at `http://localhost:8000`. Override it with:
+
+```bash
+VITE_FLIGHTDECK_API_BASE_URL=http://localhost:8000 npm run dev
+```
+
 Build for production:
 
 ```bash

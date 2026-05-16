@@ -48,7 +48,7 @@ The public repo is:
 `https://github.com/henrique-simoes/FlightDeck`
 
 Current main branch contains:
-
+- `backend/`: FastAPI PoC backend for Experiments, Blueprint Library, Variants, telemetry Events, persona MD summaries, and manual generation.
 - `CONTEXT.md`: ubiquitous language glossary — defines Blueprint, Component, Catalog, Surface, Library, Variant, Experiment, and other domain terms.
 - `Suggestions.md`: shared suggestion board for agents and contributors.
 - `frontend/`: TanStack Start frontend app.
@@ -369,6 +369,9 @@ Before making changes:
 Recommended checks:
 
 ```bash
+cd backend
+uv run pytest
+
 cd frontend
 npm install
 npm run lint

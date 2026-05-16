@@ -82,7 +82,8 @@ export function EventList() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{events.length}</span> events found in Miami
+          <span className="font-semibold text-foreground">{events.length}</span> events found in
+          Miami
         </p>
         <select className="text-sm bg-card border border-border rounded-full px-4 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30">
           <option>Most relevant</option>
