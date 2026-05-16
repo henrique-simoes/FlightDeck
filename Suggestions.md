@@ -4,163 +4,159 @@ Last updated: 2026-05-16
 
 This file is the working suggestion board for Codex agents and contributors. Always read it after `README.md`, `CONTEXT.md`, and `frontend/design.md`, then update it when priorities change.
 
-## Current Status
+## Audit Snapshot
 
-The repo is in a good early-stage shape:
+The repo is now beyond pure planning. It has a working proof of concept, but several docs still describe the north-star architecture rather than the implementation that exists today.
+
+What is ready:
 
 - Product language is defined in `CONTEXT.md`.
-- Shared project context and system architecture are defined in `README.md`.
-- UI rules, UX Laws, agentic loop rules, Reasoning Bank expectations, metrics, and REST endpoints are unified in `frontend/design.md`.
-- `frontend/` is a working TanStack Start app using the event-discovery surface as the first testbed.
-- `backend/draft.md` describes the three core backend fluxes: generate Blueprints, critique/manage the Library, and collect usage stats.
+- Shared project context, system architecture, REST contract, agent loop, and Reasoning Bank rules are defined in `README.md`.
+- UI rules, UX Laws, agentic-loop rules, metrics, reporting intent, and Design.md constraints are unified in `frontend/design.md`.
+- `frontend/design.md` passes the Google `design.md` linter.
+- `frontend/` is a working TanStack Start app using the event-discovery Surface as the first visible testbed.
+- `frontend/src/gen-ui/GenUIRenderer.tsx` renders the current declarative Blueprint payload with trusted React Components.
+- The frontend fetches the default Experiment assignment and posts telemetry for UI rendered, first action, task completed, and feedback events.
+- `backend/` has a FastAPI + SQLite proof of concept for Experiments, Blueprints, Variants, assignments, telemetry Events, persona summaries, and manual generation.
+- `backend/flightdeck/generation.py` can generate persona-specific Blueprints from `backend/personas/*.md` configuration and activate them as Variants.
+- `backend/flightdeck/catalog.py` provides a first rule-based Critique Agent pass for schema/catalog/safety checks.
+- Backend tests exist and cover generation, assignment fetch, telemetry write, and repeated generation drift.
+- ADRs exist for Python/FastAPI, SQLite, and immutable Catalog JSON snapshots.
 
-Current gap: docs are ahead of implementation. The next useful work is to make the app and backend reflect the language already defined in the docs.
+Current reality check:
 
-## Immediate Fixes
+- Agents are not truly agentic yet. The current backend generation loop is deterministic Python code plus persona MD configuration, not LangChain/LangGraph orchestration.
+- AG-UI dependencies are installed in `frontend/package.json`, but the app currently uses plain REST fetches and a manual renderer.
+- A2UI is present as an architectural target, but the current `BlueprintSpec` is a custom event-discovery schema, not the flat A2UI adjacency-list model described in `CONTEXT.md`.
+- CopilotKit and `@copilotkit/a2ui-renderer` are installed, and `backend/reference.ipynb` sketches a direction, but no production CopilotKit provider/runtime or A2UI renderer integration is wired.
+- The Reasoning Bank table exists in SQLite, but no store functions, API endpoints, report flow, or agent writes use it yet.
 
-1. **Fix frontend lint.**
-   - Current build passes, but `npm run lint` fails on Prettier formatting.
-   - Known files from last inspection:
-     - `frontend/src/components/EventFilters.tsx`
-     - `frontend/src/components/EventList.tsx`
-     - `frontend/src/server.ts`
-   - Running `npm run format` inside `frontend/` should likely fix the blocking errors.
+## How Agents, AG-UI, And A2UI Work Today
 
-2. **Decide on one package manager.**
-   - `frontend/` currently has both `package-lock.json` and `bun.lock`.
-   - Pick npm or Bun for the project and update docs/scripts accordingly.
+**Agents:** Today, the "agent" behavior is simulated by deterministic code. `flightdeck generate --all` reads persona configuration, uses telemetry counts, builds a Blueprint, critiques it, stores it, and activates it as a Variant. This is useful for proving the loop, but it is not yet LangChain/LangGraph.
 
-3. **Make the frontend reflect FlightDeck, not only Eventinkerer.**
-   - Keep Eventinkerer as the first Surface.
-   - Add FlightDeck UI around it: active Experiment, assigned Variant, Critique Agent status, first-action expectation, and Reasoning Bank preview.
+**Critique Agent:** The current Critique Agent is a Python rule function. It checks Catalog version, allowed layout, event ordering, filter validity, allowed gradient prefixes, and basic HTML-payload safety. It does not yet validate against the full `frontend/design.md`, WCAG, UX Laws, experiment isolation, or A2UI JSON Schema.
 
-## Recommended Build Order
+**AG-UI:** AG-UI packages are installed, but AG-UI is not part of the runtime path yet. There is no bidirectional AG-UI event stream, LangGraph bridge, or CopilotKit runtime endpoint in the app. The current client-server link is REST.
 
-### Phase 1: Stabilize Frontend
+**A2UI:** The repo talks about A2UI correctly as the target safety model: agents produce declarative UI intent and the client renders trusted Components. The current implementation is A2UI-like, but not A2UI-compliant. `CONTEXT.md` says Blueprints should be flat Component references with ID-based parent-child relationships; `backend/flightdeck/models.py` currently stores nested `filters`, `event_list`, and `events` fields.
 
-- Fix formatting/lint.
-- Keep `npm run build` passing.
-- Add a visible FlightDeck shell around the event-discovery Surface.
-- Add static mock panels for:
-  - active Experiment,
-  - current Variant,
-  - expected first action,
-  - critique status,
-  - Reasoning Bank preview.
+**CopilotKit:** CopilotKit dependencies are installed and the reference notebook includes example imports, but the live frontend does not wrap the app in CopilotKit and the backend does not expose a CopilotKit runtime endpoint.
 
-### Phase 2: Define Core Types
+## Missing Work
 
-Add shared TypeScript schemas/types for:
+1. **Choose the next schema truth.**
+   - Either implement the A2UI adjacency-list Blueprint shape described in `CONTEXT.md`, or explicitly name the current nested schema as `flightdeck.blueprint.event_discovery.v1`.
+   - Do this before deeper agent work so LangGraph, AG-UI, reports, and tests do not build on an ambiguous contract.
 
-- Blueprint
-- Component
-- Catalog
-- Surface
-- Library entry
-- Variant
-- Experiment
-- Telemetry event
-- Critique result
-- Reasoning Bank entry
-- Report summary
+2. **Wire the Reasoning Bank.**
+   - Add models, store functions, and APIs for `reasoning_bank_entries`.
+   - Write entries when telemetry indicates a meaningful outcome, such as first-action mismatch, completion, backtracking, or feedback.
+   - Store observable evidence only. Do not store hidden chain-of-thought.
 
-Prefer Zod schemas so runtime validation and TypeScript types stay aligned.
-
-### Phase 3: Implement Backend Skeleton
-
-Create a minimal server that implements the REST contract from `README.md` and `frontend/design.md`:
+3. **Implement the missing REST contract.**
+   - Still missing from the README/design contract:
 
 ```http
 POST /uxr/studies
 POST /uxr/tasks
 POST /uxr/personas
-POST /experiments
-POST /experiments/{id}/variants
-POST /events/ui-rendered
-POST /events/first-action
-POST /events/task-completed
-POST /events/feedback
 GET  /reports/designer/{experiment_id}
 GET  /reports/pm/{experiment_id}
 GET  /reports/dev/{experiment_id}
 GET  /reports/qa/{experiment_id}
 ```
 
-Start with in-memory storage if needed, then move to a database once schemas settle.
+4. **Bring the Catalog ADR into the database.**
+   - `docs/adr/0003-catalog-as-versioned-json-in-sqlite.md` says Catalog versions live in a `catalog_versions` table.
+   - `backend/migrations/001_initial.sql` does not yet create `catalog_versions`.
+   - Add immutable Catalog snapshots before agents start evolving the Catalog.
 
-### Phase 4: Implement The Three Hackathon Fluxes
+5. **Resolve Project scoping drift.**
+   - `docs/adr/0002-sqlite-database.md` says every table should have `project_id TEXT DEFAULT 'default'`.
+   - The current SQLite migration has no `project_id` columns.
+   - Either add `project_id` now or update the ADR to make Project scoping a later migration.
 
-From `backend/draft.md`, implement:
+6. **Upgrade the Critique Agent.**
+   - Validate against the chosen Blueprint schema.
+   - Validate against the active Catalog version.
+   - Validate `frontend/design.md` tokens and component rules.
+   - Add WCAG 2.1 AA minimum checks, reduced-motion checks, keyboard/focus checks, and tap-target checks.
+   - Add UX Laws as heuristics, not as automatic proof of quality.
+   - Add experiment isolation checks so Variants differ by intentional variables, not random drift.
 
-1. **Generate Blueprints**
-   - Inputs: system prompt, `frontend/design.md`, Catalog, old Blueprints, stats, and critique results.
-   - Output: one or more Blueprint drafts.
+7. **Make the frontend visibly FlightDeck.**
+   - Eventinkerer is a good first Surface, but the UI still mostly looks like an event app.
+   - Add FlightDeck shell panels for active Experiment, Variant, expected first action, Critique status, Catalog version, design hash, and Reasoning Bank preview.
+   - Keep persona/archetype data internal unless the user has explicitly consented to seeing or editing it.
 
-2. **Critique and manage Library**
-   - Critique Agent validates Blueprint schema, Catalog usage, design rules, accessibility, UX Laws, and experiment isolation.
-   - Passing Blueprints enter the Library.
-   - Failed Blueprints loop back for regeneration.
-   - Library manager can retire Blueprints or queue new Blueprint requests.
+8. **Wire real LangChain/LangGraph orchestration.**
+   - Backend dependencies currently do not include LangChain or LangGraph.
+   - Start with a small graph: Intent -> Blueprint Generator -> Critique -> Store/Variant Assignment -> Reasoning Bank.
+   - Keep all outputs structured with Pydantic models.
 
-3. **Collect usage stats**
-   - Capture telemetry events.
-   - Aggregate by Experiment, Variant, Surface, task, and archetype.
-   - Feed structured evidence into the Reasoning Bank.
+9. **Decide AG-UI/CopilotKit integration path.**
+   - Option A: Wire CopilotKit + AG-UI now and make AG-UI the live runtime.
+   - Option B: Keep REST for the hackathon and remove or isolate unused AG-UI/CopilotKit dependencies until needed.
+   - Avoid letting installed-but-unused packages make contributors believe AG-UI is already working.
 
-### Phase 5: Add LangChain/LangGraph Agents
+10. **Add reports.**
+    - Designer/UXR: first actions, path clusters, screenshots later, archetype differences, design-rule proposals.
+    - PM: metric direction, uncertainty, ship/iterate/hold/kill recommendation.
+    - Dev: schema failures, renderer issues, Catalog mismatches, latency, endpoint errors.
+    - QA: accessibility failures, broken actions, regression cases, WCAG checklist status.
 
-Implement agents in this order:
+11. **Add CI.**
+    - Backend: `uv sync`, `uv run pytest -q`.
+    - Frontend: `npm ci`, `npm run lint`, `npm run build`.
+    - Design: `npm exec --yes --package=@google/design.md -- design.md lint frontend/design.md`.
 
-1. Intent Agent
-2. Blueprint Generator Agent
-3. Critique Agent
-4. Experiment Agent
-5. Telemetry/Reasoning Bank Agent
-6. Report Agent
-7. Evolution Agent
+## Conflicts And Drift
 
-Keep agent output structured. Do not store or display hidden chain-of-thought.
+- `CONTEXT.md` describes Blueprints as A2UI-style flat adjacency lists, while the current backend uses a nested event-discovery `BlueprintSpec`.
+- ADR 0003 describes `catalog_versions`, but the migration does not implement it.
+- ADR 0002 describes `project_id`, but the migration does not implement it.
+- `backend/draft.md` still reads like an earlier concept note and uses older language around components, queues, and agents.
+- `frontend/readme.md` describes `design.md` mostly as brand/UI direction and should mention the unified FlightDeck design source.
+- `frontend/package.json` includes AG-UI, CopilotKit, and A2UI dependencies that are not used by runtime code yet.
+- `frontend/` has both `package-lock.json` and `bun.lock`; choose one package manager.
+- `frontend/.vite/` is tracked in git. Generated Vite cache should usually be removed and ignored.
+- `npm audit --omit=dev` reports moderate vulnerabilities through `prismjs` pulled by `@copilotkit/react-ui` and `react-syntax-highlighter`. Do not force-fix blindly if it downgrades CopilotKit or breaks the app.
 
-### Phase 6: Reports And Evaluation
+## Recommended Build Order
 
-Add role-specific report views:
-
-- Designer/UXR report
-- Developer report
-- PM report
-- QA report
-
-Use the same evidence, but tailor summary, risks, and next actions to each role.
+1. Align the docs and implementation vocabulary around the current Blueprint schema.
+2. Implement or intentionally defer `catalog_versions` and `project_id`.
+3. Add Reasoning Bank store functions and endpoints.
+4. Add the missing UXR endpoints.
+5. Add role-specific report endpoints.
+6. Upgrade Critique Agent checks.
+7. Add visible FlightDeck shell panels to the frontend.
+8. Wire a minimal LangGraph backend loop.
+9. Choose and wire the AG-UI/CopilotKit runtime path, or remove unused dependencies for now.
+10. Add CI and package-manager cleanup.
 
 ## Product Suggestions
 
 - Treat Eventinkerer as the first experimental Surface, not the final product.
-- Use the first visible demo to compare "filters-first" versus "recommendation-first" versus "quiz-first" event discovery.
-- Make the first-click expectation visible in the FlightDeck shell so users understand what is being measured.
-- Show a simple "Why this Variant exists" rationale, but never hidden reasoning.
+- Use the first visible demo to compare "filters-first", "recommendation-first", "quiz-first", and "compact-toolbar" event discovery.
+- Make the first-click expectation visible in the FlightDeck shell so contributors can see what is being measured.
+- Show a short "Why this Variant exists" rationale, but never hidden reasoning.
 - Make the Reasoning Bank visible as evidence snippets: observation, metric, proposed rule, review status.
 - Prefer fewer, controlled Variant differences over many flashy differences.
+- Use behavior archetypes as reversible task-context labels, not demographic personas.
 
-## Technical Suggestions
+## Technical Guardrails
 
-- Add CI early:
-  - install dependencies,
-  - lint,
-  - build,
-  - `design.md` lint.
+- Do not create JSON data files until explicitly asked.
+- Keep generated UI declarative. Agents may reference Catalog Components, but may not create arbitrary executable frontend code.
+- Keep all new domain terms aligned with `CONTEXT.md`.
 - Keep `frontend/design.md` valid with:
 
 ```bash
 npm exec --yes --package=@google/design.md -- design.md lint frontend/design.md
 ```
 
-- Keep all new domain terms aligned with `CONTEXT.md`.
-- If introducing JSON files, do it intentionally with schemas and version fields.
-- Keep generated UI declarative. Agents can reference Catalog Components but cannot create arbitrary executable frontend code.
-
-## Guardrails
-
-- Do not create JSON data files until explicitly asked.
 - Do not expose hidden chain-of-thought in UI, logs, reports, APIs, or Reasoning Bank entries.
 - Do not infer sensitive demographic traits.
 - Do not optimize only for clicks; protect comprehension, accessibility, reversibility, and consent.
@@ -170,8 +166,8 @@ npm exec --yes --package=@google/design.md -- design.md lint frontend/design.md
 
 ## Open Questions
 
-- Which backend runtime should the repo use first: TanStack server functions, a separate Node/Hono API, or Python/FastAPI for LangChain alignment?
-- Which database should be used first: SQLite for local speed, Postgres for production shape, or a document store for flexible Blueprints?
-- Should the Catalog live as TypeScript metadata, database rows, or a versioned JSON schema later?
-- Should the first LangChain implementation run locally, through hosted APIs, or through a queue/worker pattern?
-- What is the first real user task to optimize: event discovery, checkout, plan comparison, or onboarding?
+- Should the hackathon implementation fully adopt A2UI adjacency-list Blueprints now, or keep the current nested event-discovery schema for speed?
+- Should AG-UI/CopilotKit be wired immediately, or should the project stabilize the REST PoC first?
+- Should Catalog evolution be direct-write for the hackathon or proposal/review from day one?
+- What is the first real user task to optimize after event discovery?
+- Should reports be generated synchronously from telemetry or asynchronously by a Report Agent?
